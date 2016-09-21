@@ -7,12 +7,13 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <script src="three.js"></script>
-    <script src="Detector.js"></script>
-    <script src="OrbitControls.js"></script>
-    <script src="OBJLoader.js"></script>
-    <script src="MTLLoader.js"></script>
-
+    <script src="scripts/three.js"></script>
+    <script src="scripts/Detector.js"></script>
+    <script src="scripts/OrbitControls.js"></script>
+    <script src="scripts/OBJLoader.js"></script>
+    <script src="scripts/MTLLoader.js"></script>
+	<script src="scripts/sidenav.js"></script>
+	<link rel="stylesheet" type="text/css" href="css/sidenav.css">
     <style>
         body {
             overflow: hidden;
@@ -52,161 +53,166 @@
 
 </head>
 <body>
+	<div id="mySidenav" class="sidenav">
+	  <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
+	  <a href="#">About</a>
+	  <a href="#">Services</a>
+	  <a href="#">Clients</a>
+	  <a href="#">Contact</a>
+	</div>
+	<!-- Use any element to open the sidenav -->
+	<span onclick="openNav()">open</span>
+    
+	<!-- Add all page content inside this div if you want the side nav to push page content to the right (not used if you only want the sidenav to sit on top of the page -->
+	<div id="main">
+		<script>
 
-    <div class="left">
-        <p>Low-Poly Croupière<p>
-        <p><a href="https://manu.ninja/" target="_top">manu.ninja</a></p>
-    </div>
+			if (!Detector.webgl) {
+				Detector.addGetWebGLMessage();
+			}
 
-    <a class="right" href="https://github.com/Lorti/webgl-3d-model-viewer-using-three.js" target="_top">
-        <img src="https://camo.githubusercontent.com/652c5b9acfaddf3a9c326fa6bde407b87f7be0f4/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6f72616e67655f6666373630302e706e67">
-    </a>
+			var container;
 
-    <script>
+			var camera, controls, scene, renderer;
+			var lighting, ambient, keyLight, fillLight, backLight;
 
-        if (!Detector.webgl) {
-            Detector.addGetWebGLMessage();
-        }
+			var windowHalfX = window.innerWidth / 2;
+			var windowHalfY = window.innerHeight / 2;
 
-        var container;
+			init();
+			animate();
 
-        var camera, controls, scene, renderer;
-        var lighting, ambient, keyLight, fillLight, backLight;
+			function init() {
 
-        var windowHalfX = window.innerWidth / 2;
-        var windowHalfY = window.innerHeight / 2;
+				container = document.createElement('div');
+				document.getElementById("main").appendChild(container);
 
-        init();
-        animate();
+				/* Camera */
 
-        function init() {
+				camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 1000);
+				camera.position.z = 3;
 
-            container = document.createElement('div');
-            document.body.appendChild(container);
+				/* Scene */
 
-            /* Camera */
+				scene = new THREE.Scene();
+				lighting = false;
 
-            camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 1000);
-            camera.position.z = 3;
+				ambient = new THREE.AmbientLight(0xffffff, 1.0);
+				scene.add(ambient);
 
-            /* Scene */
+				keyLight = new THREE.DirectionalLight(new THREE.Color('hsl(30, 100%, 75%)'), 1.0);
+				keyLight.position.set(-100, 0, 100);
 
-            scene = new THREE.Scene();
-            lighting = false;
+				fillLight = new THREE.DirectionalLight(new THREE.Color('hsl(240, 100%, 75%)'), 0.75);
+				fillLight.position.set(100, 0, 100);
 
-            ambient = new THREE.AmbientLight(0xffffff, 1.0);
-            scene.add(ambient);
+				backLight = new THREE.DirectionalLight(0xffffff, 1.0);
+				backLight.position.set(100, 0, -100).normalize();
 
-            keyLight = new THREE.DirectionalLight(new THREE.Color('hsl(30, 100%, 75%)'), 1.0);
-            keyLight.position.set(-100, 0, 100);
+				/* Model */
 
-            fillLight = new THREE.DirectionalLight(new THREE.Color('hsl(240, 100%, 75%)'), 0.75);
-            fillLight.position.set(100, 0, 100);
+				var mtlLoader = new THREE.MTLLoader();
+				mtlLoader.setBaseUrl('assets/');
+				mtlLoader.setPath('assets/');
+				mtlLoader.load('female-croupier-2013-03-26.mtl', function (materials) {
 
-            backLight = new THREE.DirectionalLight(0xffffff, 1.0);
-            backLight.position.set(100, 0, -100).normalize();
+					materials.preload();
 
-            /* Model */
+					materials.materials.default.map.magFilter = THREE.NearestFilter;
+					materials.materials.default.map.minFilter = THREE.LinearFilter;
 
-            var mtlLoader = new THREE.MTLLoader();
-            mtlLoader.setBaseUrl('assets/');
-            mtlLoader.setPath('assets/');
-            mtlLoader.load('female-croupier-2013-03-26.mtl', function (materials) {
+					var objLoader = new THREE.OBJLoader();
+					objLoader.setMaterials(materials);
+					objLoader.setPath('assets/');
+					objLoader.load('female-croupier-2013-03-26.obj', function (object) {
 
-                materials.preload();
+						scene.add(object);
 
-                materials.materials.default.map.magFilter = THREE.NearestFilter;
-                materials.materials.default.map.minFilter = THREE.LinearFilter;
+					});
 
-                var objLoader = new THREE.OBJLoader();
-                objLoader.setMaterials(materials);
-                objLoader.setPath('assets/');
-                objLoader.load('female-croupier-2013-03-26.obj', function (object) {
+				});
 
-                    scene.add(object);
+				/* Renderer */
 
-                });
+				renderer = new THREE.WebGLRenderer();
+				renderer.setPixelRatio(window.devicePixelRatio);
+				renderer.setSize(window.innerWidth, window.innerHeight);
+				renderer.setClearColor(new THREE.Color("hsl(0, 0%, 10%)"));
 
-            });
+				container.appendChild(renderer.domElement);
 
-            /* Renderer */
+				/* Controls */
 
-            renderer = new THREE.WebGLRenderer();
-            renderer.setPixelRatio(window.devicePixelRatio);
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.setClearColor(new THREE.Color("hsl(0, 0%, 10%)"));
+				controls = new THREE.OrbitControls(camera, renderer.domElement);
+				controls.enableDamping = true;
+				controls.dampingFactor = 0.25;
+				controls.enableZoom = false;
 
-            container.appendChild(renderer.domElement);
+				/* Events */
 
-            /* Controls */
+				window.addEventListener('resize', onWindowResize, false);
+				window.addEventListener('keydown', onKeyboardEvent, false);
 
-            controls = new THREE.OrbitControls(camera, renderer.domElement);
-            controls.enableDamping = true;
-            controls.dampingFactor = 0.25;
-            controls.enableZoom = false;
+			}
 
-            /* Events */
+			function onWindowResize() {
 
-            window.addEventListener('resize', onWindowResize, false);
-            window.addEventListener('keydown', onKeyboardEvent, false);
+				windowHalfX = window.innerWidth / 2;
+				windowHalfY = window.innerHeight / 2;
 
-        }
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
 
-        function onWindowResize() {
+				renderer.setSize(window.innerWidth, window.innerHeight);
 
-            windowHalfX = window.innerWidth / 2;
-            windowHalfY = window.innerHeight / 2;
+			}
 
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
+			function onKeyboardEvent(e) {
 
-            renderer.setSize(window.innerWidth, window.innerHeight);
+				if (e.code === 'KeyL') {
 
-        }
+					lighting = !lighting;
 
-        function onKeyboardEvent(e) {
+					if (lighting) {
 
-            if (e.code === 'KeyL') {
+						ambient.intensity = 0.25;
+						scene.add(keyLight);
+						scene.add(fillLight);
+						scene.add(backLight);
 
-                lighting = !lighting;
+					} else {
 
-                if (lighting) {
+						ambient.intensity = 1.0;
+						scene.remove(keyLight);
+						scene.remove(fillLight);
+						scene.remove(backLight);
 
-                    ambient.intensity = 0.25;
-                    scene.add(keyLight);
-                    scene.add(fillLight);
-                    scene.add(backLight);
+					}
 
-                } else {
+				}
 
-                    ambient.intensity = 1.0;
-                    scene.remove(keyLight);
-                    scene.remove(fillLight);
-                    scene.remove(backLight);
+			}
 
-                }
+			function animate() {
 
-            }
+				requestAnimationFrame(animate);
 
-        }
+				controls.update();
 
-        function animate() {
+				render();
 
-            requestAnimationFrame(animate);
+			}
 
-            controls.update();
+			function render() {
 
-            render();
+				renderer.render(scene, camera);
 
-        }
+			}
 
-        function render() {
+		</script>
+	</div>
 
-            renderer.render(scene, camera);
-
-        }
-
-    </script>
+    
 
 </body>
 </html>
