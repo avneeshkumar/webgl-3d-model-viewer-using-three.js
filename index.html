@@ -55,9 +55,13 @@
 <body>
 	<div id="mySidenav" class="sidenav">
 	  <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
-	  <a href="#">About</a>
-	  <a href="#">Services</a>
-	  <a href="#">Clients</a>
+		<div 
+		  <a href="#">Add Models</a>
+		  <input id="loadmodel" name="loadmodel" type="file">
+		  
+		</div>
+	  <a href="#">Light</a>
+	  <a href="#">Camera</a>
 	  <a href="#">Contact</a>
 	</div>
 	<!-- Use any element to open the sidenav -->
@@ -110,8 +114,10 @@
 				backLight.position.set(100, 0, -100).normalize();
 
 				/* Model */
-
+				
+				var objectmaterials;
 				var mtlLoader = new THREE.MTLLoader();
+				var objLoader = new THREE.OBJLoader();
 				mtlLoader.setBaseUrl('assets/');
 				mtlLoader.setPath('assets/');
 				mtlLoader.load('female-croupier-2013-03-26.mtl', function (materials) {
@@ -120,15 +126,17 @@
 
 					materials.materials.default.map.magFilter = THREE.NearestFilter;
 					materials.materials.default.map.minFilter = THREE.LinearFilter;
-
-					var objLoader = new THREE.OBJLoader();
+					
+					
+					
+					objectmaterials = materials;
 					objLoader.setMaterials(materials);
-					objLoader.setPath('assets/');
-					objLoader.load('female-croupier-2013-03-26.obj', function (object) {
-
+					objLoader.load('assets/female-croupier-2013-03-26.obj', function (object) {
+						
 						scene.add(object);
 
 					});
+					
 
 				});
 
@@ -208,6 +216,12 @@
 				renderer.render(scene, camera);
 
 			}
+			
+			document.getElementById('loadmodel').onchange = function(e) { 
+				alert(document.getElementById('loadmodel').file);
+			};
+			
+			
 
 		</script>
 	</div>
